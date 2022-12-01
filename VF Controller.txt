@@ -1,0 +1,196 @@
+public class contactPaginationController{
+ 
+ //variable used in page.
+ Public Integer size{get;set;}
+ Public Integer noOfRecords{get; set;}
+ public List<SelectOption> paginationSizeOptions{get;set;}
+ public static final Integer QUERY_LIMIT = 10000;
+ public static final Integer PAGE_SIZE = 5;
+ Public String filter1 {get;set;}
+     Public String con1 {get;set;}
+
+ public List <WrapperClass> wrapperRecordList{get;set;}
+ Map<Id, WrapperClass> mapHoldingSelectedRecords{get;set;}
+ 
+ //
+ public String selectedCountry1{get;set;}
+
+ //constructor calling init method.
+ public contactPaginationController(){
+   mapHoldingSelectedRecords = new Map<Id, WrapperClass>();
+     system.debug('contactPaginationController'+wrapperRecordList);
+   init();
+ 
+ }
+ 
+//Init method which queries the records from standard set controller.
+ public void init() {
+ wrapperRecordList = new List<WrapperClass>();
+          system.debug('init'+wrapperRecordList);
+
+ for (Contact cont : (List<Contact>)setCon.getRecords()) {
+ if(mapHoldingSelectedRecords != null && mapHoldingSelectedRecords.containsKey(cont.id)){
+               system.debug('if'+wrapperRecordList);
+
+ wrapperRecordList.add(mapHoldingSelectedRecords.get(cont.id));
+
+ }
+ else{
+   wrapperRecordList.add(new WrapperClass(cont, false));
+                     system.debug('else'+wrapperRecordList);
+
+ }
+ }
+ }
+ 
+ /** Instantiate the StandardSetController from a query locater*/
+ public ApexPages.StandardSetController setCon {
+ get {
+ if(setCon == null) {
+   setCon = new ApexPages.StandardSetController(Database.getQueryLocator([SELECT Id,Name, Email, Phone FROM Contact LIMIT : QUERY_LIMIT ]));
+                      system.debug('setCon'+wrapperRecordList);
+
+   // sets the number of records to show in each page view
+   setCon.setPageSize(PAGE_SIZE);
+ }
+   return setCon;
+ }
+ set;
+ }
+ 
+ /** indicates whether there are more records after the current page set.*/
+ public Boolean hasNext {
+ get {
+                           system.debug('hasNext'+wrapperRecordList);
+
+   return setCon.getHasNext();
+ }
+ set;
+ }
+ 
+ /** indicates whether there are more records before the current page set.*/
+ public Boolean hasPrevious {
+ get {
+                                system.debug('hasPrevious'+wrapperRecordList);
+
+   return setCon.getHasPrevious();
+ }
+ set;
+ }
+ 
+ /** returns the page number of the current page set*/
+ public Integer pageNumber {
+ get {
+   return setCon.getPageNumber();
+ }
+ set;
+ }
+ 
+ /** return total number of pages for page set*/
+   Public Integer getTotalPages(){
+     Decimal totalSize = setCon.getResultSize();
+     Decimal pageSize = setCon.getPageSize();
+     Decimal pages = totalSize/pageSize;
+     return (Integer)pages.round(System.RoundingMode.CEILING);
+ }
+ 
+ /** returns the first page of the page set*/
+ public void first() {
+   updateSearchItemsMap();
+   setCon.first();
+   init();
+ }
+ 
+ /** returns the last page of the page set*/
+ public void last() {
+   updateSearchItemsMap();
+   setCon.last();
+   init();
+ }
+ 
+ /** returns the previous page of the page set*/
+ public void previous() {
+   updateSearchItemsMap();
+   setCon.previous();
+   init();
+ }
+  public PageReference ExportToExcel(){
+   
+       PageReference exdownload=new PageReference('apex/exportDataExcel');
+        exdownload = Page.exportDataExcel;
+        exdownload.setRedirect(true);
+        return exdownload;
+       
+   
+   }
+    
+        public List <selectOption> getSelectOption()
+        {
+            List <selectOption> Slist=new List <selectOption>();
+            Slist.add(new selectOption('Equals','Equals'));
+            Slist.add(new selectOption('Not Equals','Not Equals'));
+            system.debug('getSelectOption'+wrapperRecordList);
+
+            return SList;
+        }
+
+ /** returns the next page of the page set*/
+ public void next() {
+   updateSearchItemsMap();
+   setCon.next();
+   init();
+ }
+    
+    public void searchFilter()
+    {
+        
+        //either of the next 2 lines will work, 
+        string passedParam1 = Apexpages.currentPage().getParameters().get('filter1');
+        string passedParam2 = Apexpages.currentPage().getParameters().get('condition');
+
+        system.debug(passedParam1);
+        system.debug(passedParam2);
+        system.debug('Before searchFilter'+wrapperRecordList);
+
+        system.debug('filter1'+filter1);
+        wrapperRecordList.clear();
+        String searchval='%' + passedParam1 + '%';
+        list<Contact> coList=new list<Contact> ();
+        if(passedParam2=='Equals')
+        {
+            coList=[SELECT Id,Name, Email, Phone FROM Contact where name like :searchval  LIMIT : QUERY_LIMIT];
+            system.debug('coList'+coList);
+        }
+       // wrapperRecordList.add(new WrapperClass(coList,false) );
+        for(Contact c:coList)
+        {
+          wrapperRecordList.add(new WrapperClass(c,false) );  
+        }
+        
+        system.debug('After wrapperRecordList'+wrapperRecordList);
+    }
+ 
+ //This is the method which manages to remove the deselected records, and keep the records which are selected in map.
+ private void updateSearchItemsMap() {
+ for(WrapperClass wrp : wrapperRecordList){
+  if(wrp.isSelected){
+     mapHoldingSelectedRecords.put(wrp.contactRecord.id, wrp);
+  }
+  if(wrp.isSelected == false && mapHoldingSelectedRecords.containsKey(wrp.contactRecord.id)){
+     mapHoldingSelectedRecords.remove(wrp.contactRecord.id);
+  }
+ }
+ }
+ 
+ //wrapper class being used for checkbox showing.
+ public class WrapperClass {
+ public Boolean isSelected {get;set;}
+ public Contact contactRecord {get;set;}
+ public WrapperClass(Contact contactRecord, Boolean isSelected) {
+    this.contactRecord = contactRecord;
+    this.isSelected = isSelected;
+ }
+ }
+   
+ 
+}

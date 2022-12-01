@@ -1,0 +1,67 @@
+<apex:page controller="contactPaginationController"  tabStyle="Contact" id="thePage">
+   <apex:sectionHeader title="Contact" subtitle="Contact Pagination" />
+    
+    <script>
+    function filterFun()
+    {
+        alert('hiii');
+        var text1= document.getElementById("theTextInput1").value;
+        // var con1= document.getElementById("selectCondition").value;
+                var con1= document.getElementById('{!$Component.thePage.theForm.selectCondition}').value;
+
+
+        alert(con1);
+        filterAction(text1,con1);
+    }
+    </script>
+    <apex:form id="theForm">
+        <!-- <apex:commandButton value="Export" action="{!ExportToExcel}"  status="Export"/> -->
+        <apex:outputLabel value="Name" />
+ 
+         <apex:selectList multiselect="false" size="1" id="selectCondition" value="{!con1}">
+                <apex:selectOptions Value="{!SelectOption}" />
+         </apex:selectList>
+        
+        <input type='text'  id="theTextInput1" value="" />
+        <apex:commandButton value="Filter" onclick="filterFun()" />
+        
+        <apex:actionFunction name="filterAction" action="{!searchFilter}"  rerender="pbId" >
+            <apex:param name="filter1" assignTo="{!filter1}" value="" />
+                        <apex:param name="condition" assignTo="{!condition}" value="" />
+
+            
+        </apex:actionFunction>
+        <apex:outputPanel id="pbId">
+      <apex:pageBlock title="All Contacts">
+         
+          <apex:pageBlockTable value="{!wrapperRecordList}" var="cont">
+           <apex:column headerValue="Select">
+             <apex:inputCheckbox value="{!cont.isSelected}"/>
+           </apex:column>
+           <apex:column headerValue="Name">
+             <apex:outputField value="{!cont.contactRecord.name}"/>
+           </apex:column>
+           <apex:column headerValue="Email">
+             <apex:outputField value="{!cont.contactRecord.Email}"/>
+           </apex:column>
+           <apex:column headerValue="Phone">
+            <apex:outputField value="{!cont.contactRecord.Phone}"/>
+           </apex:column>
+       </apex:pageBlockTable>
+ 
+ <!-- Action Buttons visible on bottom of page for pagination -->
+       <apex:outputPanel style="text-align:center;" layout="block">
+          <apex:commandButton value="First" reRender="pbId" action="{!first}" disabled="{!NOT(hasPrevious)}" status="paginationStatus"/>
+          <apex:commandButton value="Previous" rerender="pbId" action="{!previous}" disabled="{!NOT(hasPrevious)}" status="paginationStatus"/>&nbsp;Page {!pageNumber} of {!totalPages}&nbsp;
+          <apex:commandButton value="Next" rerender="pbId" action="{!next}" disabled="{!NOT(hasNext)}" status="paginationStatus"/>
+          <apex:commandButton value="Last" rerender="pbId" action="{!last}" disabled="{!NOT(hasNext)}" status="paginationStatus"/>
+          <apex:actionStatus id="paginationStatus">
+             <apex:facet name="start">
+                 Please wait...<img src="/img/loading32.gif" style="width: 18px;"/>
+             </apex:facet>
+          </apex:actionStatus>
+       </apex:outputPanel>
+ </apex:pageBlock>
+            </apex:outputPanel>
+ </apex:form>
+</apex:page>
